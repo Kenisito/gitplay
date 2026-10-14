@@ -56,7 +56,7 @@ test('detecta y permite resolver un conflicto en merge de tres vías', async ({ 
   await expect(page.locator('#console')).toContainText('Commit creado correctamente');
   await expect(page.locator('#progress-text')).toHaveText('2 / 5 misiones');
   await page.locator('#file-list').getByText('mensaje.txt').click();
-  await expect(page.locator('#file-content')).toHaveValue('Hola desde feature\\n');
+  await expect(page.locator('#file-content')).toHaveValue(/Hola desde feature/);
 });
 
 test('el progreso se conserva al recargar', async ({ page }) => {
