@@ -55,3 +55,9 @@ npm test
 ```
 
 Consulta el resultado en [GitHub Actions](https://github.com/Kenisito/gitplay/actions).
+
+## Laboratorio de Pull Requests
+
+Después de crear un commit en una rama `feature/*`, publica la rama con `git push -u origin feature/Mariana`. Abre el panel **Laboratorio de Pull Requests**, selecciona la rama, crea el PR, inspecciona los cambios, deja comentarios, apruébalo y realiza el merge. Para recuperar los cambios fusionados en tu rama `main` local, utiliza `git switch main` y `git pull origin main`.
+
+Los Pull Requests son simulados y se guardan localmente en el navegador. No se realizan solicitudes a GitHub.
