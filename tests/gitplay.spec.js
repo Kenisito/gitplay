@@ -105,3 +105,21 @@ test('la tarjeta de misión se sincroniza con comandos y enseña el checklist', 
   await expect(page.locator('#mission-steps')).toContainText('Crear avance.txt');
   await expect(page.locator('#mission-activity')).toContainText('touch avance.txt');
 });
+
+test('comandos rápidos e historial de terminal', async ({ page }) => {
+  await page.locator('[data-command="git status"]').click();
+  await expect(page.locator('#console')).toContainText('On branch main');
+  await expect(page.locator('#tree-indicator')).toContainText('Limpio');
+  await command(page, 'touch test-ui.txt');
+  await expect(page.locator('#tree-indicator')).toContainText('Cambios pendientes');
+  await page.locator('#command').press('ArrowUp');
+  await expect(page.locator('#command')).toHaveValue('touch test-ui.txt');
+});
+test('muestra aviso antes de descartar ediciones no guardadas', async ({ page }) => {
+  await page.locator('#file-content').fill('Contenido sin guardar');
+  let message = '';
+  page.on('dialog', dialog => {message=dialog.message();return dialog.dismiss()});
+  await page.locator('[data-command="git status"]').click();
+  expect(message).toContain('sin guardar');
+  await expect(page.locator('#file-content')).toHaveValue('Contenido sin guardar');
+});
