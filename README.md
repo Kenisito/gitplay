@@ -25,7 +25,7 @@ git merge feature
 - Ramas y commits con snapshots de contenido.
 - Merge fast-forward y merge de tres vías con conflictos por archivo.
 - Editor visual de resolución de conflictos.
-- Grafo de commits, cinco misiones y puntos de experiencia.
+- Grafo de commits, laboratorio de práctica libre.
 - Progreso guardado en `localStorage`.
 
 Usa **Preparar escenario de conflicto** para entrenar con un merge conflict.
@@ -61,3 +61,7 @@ Consulta el resultado en [GitHub Actions](https://github.com/Kenisito/gitplay/ac
 Después de crear un commit en una rama `feature/*`, publica la rama con `git push -u origin feature/Mariana`. Abre el panel **Laboratorio de Pull Requests**, selecciona la rama, crea el PR, inspecciona los cambios, deja comentarios, apruébalo y realiza el merge. Para recuperar los cambios fusionados en tu rama `main` local, utiliza `git switch main` y `git pull origin main`.
 
 Los Pull Requests son simulados y se guardan localmente en el navegador. No se realizan solicitudes a GitHub.
+
+## Experiencia actual
+
+El Playground está en modo **práctica libre**: no hay misiones ni objetivos obligatorios. Ejecuta comandos, inspecciona archivos y construye tu historial sin bloqueo de progreso.
