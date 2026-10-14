@@ -65,3 +65,31 @@ test('el progreso se conserva al recargar', async ({ page }) => {
   await expect(page.locator('#progress-text')).toHaveText('1 / 5 misiones');
   await expect(page.locator('#xp')).toContainText('100 XP');
 });
+
+test('rama con slash, push remoto y retorno a main', async ({ page }) => {
+  await command(page, 'git switch -c feature/Mariana');
+  await expect(page.locator('#current-branch')).toHaveText('feature/Mariana');
+  await command(page, 'touch propuesta.txt');
+  await command(page, 'git add .');
+  await command(page, 'git commit -m "Agregar propuesta"');
+  await command(page, 'git push -u origin feature/Mariana');
+  await expect(page.locator('#console')).toContainText('Push simulado OK');
+  await command(page, 'git branch -a');
+  await expect(page.locator('#console')).toContainText('remotes/origin/feature/Mariana');
+  await command(page, 'git switch main');
+  await expect(page.locator('#file-list')).not.toContainText('propuesta.txt');
+  await command(page, 'git merge feature/Mariana');
+  await command(page, 'git push origin main');
+  await expect(page.locator('#file-list')).toContainText('propuesta.txt');
+});
+test('diff, mv, restore y rm alteran el repositorio virtual', async ({ page }) => {
+  await command(page, 'touch demo.txt');
+  await command(page, 'git mv demo.txt renombrado.txt');
+  await expect(page.locator('#file-list')).toContainText('renombrado.txt');
+  await command(page, 'git diff');
+  await expect(page.locator('#console')).toContainText('renombrado.txt');
+  await command(page, 'git rm renombrado.txt');
+  await expect(page.locator('#file-list')).not.toContainText('renombrado.txt');
+  await command(page, 'git restore README.md');
+  await expect(page.locator('#file-list')).toContainText('README.md');
+});
