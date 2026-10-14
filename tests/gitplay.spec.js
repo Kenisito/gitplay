@@ -141,3 +141,15 @@ test('git add con cambios avanza checklist pero requiere commit', async ({ page 
   await command(page, 'git commit -m "Mi avance"');
   await expect(page.locator('#progress-text')).toContainText('3 / 5');
 });
+
+test('permite crear rama nueva conservando cambios preparados', async ({ page }) => {
+  await command(page, 'touch pendiente.txt');
+  await command(page, 'git add .');
+  await command(page, 'git status');
+  await expect(page.locator('#console')).toContainText('Changes staged for commit: pendiente.txt');
+  await command(page, 'git switch -c feature/Mariana');
+  await expect(page.locator('#current-branch')).toHaveText('feature/Mariana');
+  await command(page, 'git commit -m "Guardar pendiente"');
+  await expect(page.locator('#console')).toContainText('Commit creado correctamente');
+  await expect(page.locator('#file-list')).toContainText('pendiente.txt');
+});
