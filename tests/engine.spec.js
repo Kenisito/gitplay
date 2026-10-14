@@ -39,3 +39,41 @@ test('motor: marca cambios pendientes y los limpia después del commit', () => {
   engine.commit(s,'agregar archivo');
   expect(s.dirty).toBeFalsy();
 });
+
+test('stash guarda cambios y permite restaurarlos', () => {
+  const s=engine.initial();
+  s.work['temporal.txt']='WIP';
+  engine.updateDirty(s);
+  expect(engine.stash(s,'push')).toBe('stash@{0}');
+  expect(s.work['temporal.txt']).toBeUndefined();
+  expect(engine.stash(s,'list')).toHaveLength(1);
+  engine.stash(s,'pop');
+  expect(s.work['temporal.txt']).toBe('WIP');
+  expect(engine.stash(s,'list')).toHaveLength(0);
+});
+test('reset soft conserva staging y reset hard recupera el snapshot', () => {
+  const s=engine.initial(),root=s.branches.main;
+  s.work['change.txt']='contenido';s.staged={...s.work};
+  engine.commit(s,'Cambio');
+  engine.reset(s,'--soft',root);
+  expect(s.staged['change.txt']).toBe('contenido');
+  engine.reset(s,'--hard',root);
+  expect(s.work['change.txt']).toBeUndefined();
+  expect(s.staged).toBeNull();
+});
+test('cherry-pick aplica cambios de otra rama como nuevo commit', () => {
+  const s=engine.initial(),root=s.branches.main;
+  s.branches.feature=root;s.branch='feature';
+  s.work['feature.txt']='contenido';s.staged={...s.work};
+  const id=engine.commit(s,'Agregar feature');
+  s.branch='main';s.work={...s.commits[root].files};s.staged=null;
+  const created=engine.cherryPick(s,id);
+  expect(s.commits[created].parents).toEqual([root]);
+  expect(s.work['feature.txt']).toBe('contenido');
+});
+test('tags apuntan a snapshots y no se pueden duplicar', () => {
+  const s=engine.initial();
+  expect(engine.tag(s,'v1.0.0')).toBe('a1b2c3');
+  expect(engine.tag(s)).toEqual({'v1.0.0':'a1b2c3'});
+  expect(()=>engine.tag(s,'v1.0.0')).toThrow();
+});
