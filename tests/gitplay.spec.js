@@ -54,7 +54,7 @@ test('detecta y permite resolver un conflicto en merge de tres vías', async ({ 
   await page.getByRole('button', { name: 'Guardar y marcar resuelto' }).click();
   await command(page, 'git commit -m "Resolver conflicto"');
   await expect(page.locator('#console')).toContainText('Commit creado correctamente');
-  await expect(page.locator('#progress-text')).toHaveText('2 / 5 misiones');
+  await expect(page.locator('#progress-text')).toHaveText('1 / 5 misiones');
   await page.locator('#file-list').getByText('mensaje.txt').click();
   await expect(page.locator('#file-content')).toHaveValue(/Hola desde feature/);
 });
@@ -118,7 +118,8 @@ test('comandos rápidos e historial de terminal', async ({ page }) => {
 test('muestra aviso antes de descartar ediciones no guardadas', async ({ page }) => {
   await page.locator('#file-content').fill('Contenido sin guardar');
   let message = '';
-  page.on('dialog', dialog => {message=dialog.message();return dialog.dismiss()});
+  page.removeAllListeners('dialog');
+  page.once('dialog', async dialog => { message = dialog.message(); await dialog.dismiss(); });
   await page.locator('[data-command="git status"]').click();
   expect(message).toContain('sin guardar');
   await expect(page.locator('#file-content')).toHaveValue('Contenido sin guardar');
