@@ -16,7 +16,7 @@ test('carga la interfaz y comienza sin errores', async ({ page }) => {
   await expect(page).toHaveTitle(/GitPlay/);
   await expect(page.locator('#current-branch')).toHaveText('main');
   await expect(page.locator('#stat-commits')).toHaveText('1');
-  await expect(page.locator('#progress-text')).toHaveText('0 / 5 misiones');
+  await expect(page.locator('#missions')).toHaveCount(0);
 });
 
 test('status, archivo, staging y commit cumplen las primeras misiones', async ({ page }) => {
@@ -25,8 +25,8 @@ test('status, archivo, staging y commit cumplen las primeras misiones', async ({
   await command(page, 'git add .');
   await command(page, 'git commit -m "Mi avance"');
   await expect(page.locator('#stat-commits')).toHaveText('2');
-  await expect(page.locator('#progress-text')).toHaveText('3 / 5 misiones');
-  await expect(page.locator('#xp')).toContainText('300 XP');
+  await expect(page.locator('#console')).toContainText('Commit creado correctamente');
+
   await expect(page.locator('#file-list')).toContainText('avance.txt');
 });
 
@@ -42,7 +42,7 @@ test('rama feature, commit y merge fast-forward', async ({ page }) => {
   await expect(page.locator('#file-list')).toContainText('feature.txt');
   await expect(page.locator('#console')).toContainText('Fast-forward');
   await expect(page.locator('#stat-branches')).toHaveText('2');
-  await expect(page.locator('#progress-text')).toHaveText('1 / 5 misiones');
+  await expect(page.locator('#current-branch')).toHaveText('main');
 });
 
 test('detecta y permite resolver un conflicto en merge de tres vías', async ({ page }) => {
@@ -54,7 +54,7 @@ test('detecta y permite resolver un conflicto en merge de tres vías', async ({ 
   await page.getByRole('button', { name: 'Guardar y marcar resuelto' }).click();
   await command(page, 'git commit -m "Resolver conflicto"');
   await expect(page.locator('#console')).toContainText('Commit creado correctamente');
-  await expect(page.locator('#progress-text')).toHaveText('1 / 5 misiones');
+  await expect(page.locator('#current-branch')).toHaveText('main');
   await page.locator('#file-list').getByText('mensaje.txt').click();
   await expect(page.locator('#file-content')).toHaveValue(/Hola desde feature/);
 });
@@ -62,8 +62,8 @@ test('detecta y permite resolver un conflicto en merge de tres vías', async ({ 
 test('el progreso se conserva al recargar', async ({ page }) => {
   await command(page, 'git status');
   await page.reload();
-  await expect(page.locator('#progress-text')).toHaveText('1 / 5 misiones');
-  await expect(page.locator('#xp')).toContainText('100 XP');
+  await expect(page.locator('#current-branch')).toHaveText('main');
+
 });
 
 test('rama con slash, push remoto y retorno a main', async ({ page }) => {
@@ -94,17 +94,6 @@ test('diff, mv, restore y rm alteran el repositorio virtual', async ({ page }) =
   await expect(page.locator('#file-list')).toContainText('README.md');
 });
 
-test('la tarjeta de misión se sincroniza con comandos y enseña el checklist', async ({ page }) => {
-  await expect(page.locator('#mission-count')).toContainText('0 / 1');
-  await command(page, 'git status');
-  await expect(page.locator('#mission-activity')).toContainText('git status');
-  await expect(page.locator('#mission-count')).toContainText('1 / 1');
-  await page.locator('#next-mission').click();
-  await expect(page.locator('#mission-title')).toContainText('primer archivo');
-  await command(page, 'touch avance.txt');
-  await expect(page.locator('#mission-steps')).toContainText('Crear avance.txt');
-  await expect(page.locator('#mission-activity')).toContainText('touch avance.txt');
-});
 
 test('comandos rápidos e historial de terminal', async ({ page }) => {
   await page.locator('[data-command="git status"]').click();
@@ -131,16 +120,12 @@ test('git add sin cambios no muestra staging falso', async ({ page }) => {
   await expect(page.locator('#tree-indicator')).toContainText('Limpio');
 });
 
-test('git add con cambios avanza checklist pero requiere commit', async ({ page }) => {
-  await command(page, 'git status');
+test('git add prepara cambios y commit los confirma', async ({page}) => {
   await command(page, 'touch avance.txt');
-  await page.locator('#next-mission').click();
-  await page.locator('#next-mission').click();
   await command(page, 'git add .');
-  await expect(page.locator('#mission-context')).toContainText('Ya ejecutaste git add .');
-  await expect(page.locator('#mission-steps')).toContainText('✓ Preparar cambios con git add .');
+  await expect(page.locator('#console')).toContainText('Staging actualizado');
   await command(page, 'git commit -m "Mi avance"');
-  await expect(page.locator('#progress-text')).toContainText('3 / 5');
+  await expect(page.locator('#console')).toContainText('Commit creado correctamente');
 });
 
 test('permite crear rama nueva conservando cambios preparados', async ({ page }) => {
