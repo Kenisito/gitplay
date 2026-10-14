@@ -77,3 +77,20 @@ test('tags apuntan a snapshots y no se pueden duplicar', () => {
   expect(engine.tag(s)).toEqual({'v1.0.0':'a1b2c3'});
   expect(()=>engine.tag(s,'v1.0.0')).toThrow();
 });
+
+test('PR simulado requiere push y aprobación antes de fusionar', () => {
+  const s=engine.initial(),root=s.branches.main;
+  s.branches['feature/Mariana']=root;s.branch='feature/Mariana';
+  s.work['nuevo.txt']='contenido';s.staged={...s.work};
+  engine.commit(s,'Nueva función');
+  expect(()=>engine.createPR(s,'feature/Mariana','Mi PR')).toThrow(/Publica la rama/);
+  s.remote['feature/Mariana']=s.branches['feature/Mariana'];
+  const pr=engine.createPR(s,'feature/Mariana','Mi PR');
+  expect(engine.prDiff(s,pr.head,pr.base).map(x=>x.path)).toContain('nuevo.txt');
+  expect(()=>engine.mergePR(s,pr.number)).toThrow(/aprobación/);
+  engine.reviewPR(s,pr.number,'comment','Revisado');
+  engine.reviewPR(s,pr.number,'approve');
+  engine.mergePR(s,pr.number);
+  expect(pr.status).toBe('merged');
+  expect(s.remote.main).toBe(s.remote['feature/Mariana']);
+});
