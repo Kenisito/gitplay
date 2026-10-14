@@ -93,3 +93,15 @@ test('diff, mv, restore y rm alteran el repositorio virtual', async ({ page }) =
   await command(page, 'git restore README.md');
   await expect(page.locator('#file-list')).toContainText('README.md');
 });
+
+test('la tarjeta de misión se sincroniza con comandos y enseña el checklist', async ({ page }) => {
+  await expect(page.locator('#mission-count')).toContainText('0 / 1');
+  await command(page, 'git status');
+  await expect(page.locator('#mission-activity')).toContainText('git status');
+  await expect(page.locator('#mission-count')).toContainText('1 / 1');
+  await page.locator('#next-mission').click();
+  await expect(page.locator('#mission-title')).toContainText('primer archivo');
+  await command(page, 'touch avance.txt');
+  await expect(page.locator('#mission-steps')).toContainText('Crear avance.txt');
+  await expect(page.locator('#mission-activity')).toContainText('touch avance.txt');
+});
