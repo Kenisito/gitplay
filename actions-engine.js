@@ -1,0 +1,13 @@
+/* GitPlay GitHub Actions simulation engine. No external execution. */
+(function(root){'use strict';
+const templates={
+ci:{name:'GitPlay CI',jobs:[{id:'build',needs:[],steps:['Checkout','Install dependencies','Build']},{id:'test',needs:['build'],steps:['Run unit tests','Validate results']}]},
+deploy:{name:'GitPlay CD',jobs:[{id:'build',needs:[],steps:['Checkout','Build']},{id:'test',needs:['build'],steps:['Run tests']},{id:'deploy',needs:['test'],steps:['Deploy to GitHub Pages','Verify deployment']}]},
+failure:{name:'Incidente en CI',jobs:[{id:'build',needs:[],steps:['Checkout','Build']},{id:'test',needs:['build'],steps:['Run tests'],fails:true},{id:'deploy',needs:['test'],steps:['Publish release']}]}
+};
+function create(key){if(!templates[key])throw Error('Escenario desconocido');return JSON.parse(JSON.stringify(templates[key]));}
+function validate(flow){if(!flow?.jobs?.length)throw Error('Agrega jobs.');const ids=new Set();for(const job of flow.jobs){if(!/^[a-z][\w-]*$/.test(job.id)||ids.has(job.id))throw Error('ID de job inválido o duplicado: '+job.id);ids.add(job.id)}for(const job of flow.jobs)for(const dep of job.needs||[])if(!ids.has(dep)||dep===job.id)throw Error('Dependencia inválida: '+dep);let remaining=new Set(ids),done=new Set(),layers=[];while(remaining.size){const layer=flow.jobs.filter(j=>remaining.has(j.id)&&(j.needs||[]).every(d=>done.has(d))).map(j=>j.id);if(!layer.length)throw Error('Dependencias circulares.');layers.push(layer);layer.forEach(id=>{remaining.delete(id);done.add(id)})}return layers;}
+function simulate(flow,{retryFailed=false}={}){const layers=validate(flow),status={},logs=[];for(const layer of layers)for(const id of layer){const job=flow.jobs.find(j=>j.id===id);if((job.needs||[]).some(d=>status[d]!=='success')){status[id]='skipped';logs.push('⊘ '+id+': omitido por dependencia fallida');continue}logs.push('▶ '+id+': iniciado');for(const step of job.steps||[])logs.push('  ✓ '+step);status[id]=job.fails&&!retryFailed?'failure':'success';logs.push((status[id]==='success'?'✓ ':'✕ ')+id+': '+status[id]);}return {layers,status,logs,success:Object.values(status).every(x=>x==='success')};}
+function yaml(flow){validate(flow);return 'name: '+flow.name+'\non:\n  push:\n    branches: [main]\njobs:\n'+flow.jobs.map(j=>'  '+j.id+':\n    runs-on: ubuntu-latest\n'+(j.needs.length?'    needs: ['+j.needs.join(', ')+']\n':'')+'    steps:\n'+j.steps.map(step=>'      - name: '+step+'\n        run: echo "Simulación educativa"').join('\n')).join('\n')+'\n';}
+const api=Object.freeze({create,validate,simulate,yaml});root.GitPlayActions=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
+})(globalThis);
