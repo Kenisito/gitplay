@@ -43,3 +43,15 @@ Usa **Preparar escenario de conflicto** para entrenar con un merge conflict.
 ## Tecnologías
 
 HTML, CSS y JavaScript sin dependencias.
+
+## Pruebas automatizadas
+
+GitHub Actions ejecuta las pruebas de navegador en cada push a `main` y en cada Pull Request.
+
+```bash
+npm install
+npx playwright install chromium
+npm test
+```
+
+Consulta el resultado en [GitHub Actions](https://github.com/Kenisito/gitplay/actions).
