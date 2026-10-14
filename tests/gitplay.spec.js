@@ -123,3 +123,21 @@ test('muestra aviso antes de descartar ediciones no guardadas', async ({ page })
   expect(message).toContain('sin guardar');
   await expect(page.locator('#file-content')).toHaveValue('Contenido sin guardar');
 });
+
+test('git add sin cambios no muestra staging falso', async ({ page }) => {
+  await command(page, 'git add .');
+  await expect(page.locator('#console')).toContainText('No hay cambios nuevos para preparar');
+  await expect(page.locator('#tree-indicator')).toContainText('Limpio');
+});
+
+test('git add con cambios avanza checklist pero requiere commit', async ({ page }) => {
+  await command(page, 'git status');
+  await command(page, 'touch avance.txt');
+  await page.locator('#next-mission').click();
+  await page.locator('#next-mission').click();
+  await command(page, 'git add .');
+  await expect(page.locator('#mission-context')).toContainText('Ya ejecutaste git add .');
+  await expect(page.locator('#mission-steps')).toContainText('✓ Preparar cambios con git add .');
+  await command(page, 'git commit -m "Mi avance"');
+  await expect(page.locator('#progress-text')).toContainText('3 / 5');
+});
